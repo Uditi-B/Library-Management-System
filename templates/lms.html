@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Management System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #E8F5E9;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #2E7D32;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        nav {
+            background-color: #388E3C;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px;
+        }
+        nav button, nav select, form button {
+            background-color: #66BB6A;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+        nav button:hover, nav select:hover,
+        form:valid button:hover {
+            background-color: #43A047;
+        }
+        form:valid button {
+            background-color: #2E7D32;
+        }
+        form:valid button:active {
+            background-color: #1B5E20;
+        }
+
+        .form-section {
+            display: none;
+            padding: 20px;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        form input, form select {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .results-section {
+            padding: 20px;
+        }
+        .results-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .results-section li {
+            background: #ffffff;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+    <script>
+        function showSection(id) {
+            var sections = document.getElementsByClassName('form-section');
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].style.display = 'none';
+            }
+            var el = document.getElementById(id);
+            if (el) el.style.display = 'block';
+        }
+
+        function handleSearchDropdown(select) {
+            showSection(select.value);
+            select.selectedIndex = 0;
+        }
+
+        function confirmDelete() {
+            return confirm("Are you sure you want to delete this book?");
+        }
+    </script>
+</head>
+<body>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul style="background-color:#fff3cd;color:#856404;padding:15px;border-radius:8px;list-style:none;">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% if session['username'] %}
+    <div style="background-color: #C8E6C9; padding: 10px; text-align: center; color: #2E7D32; font-weight: bold;">
+        Logged in as {{ session['username'] }} ({{ session['role'] }})
+    </div>
+    {% endif %}
+
+    <header>
+        <h1>Library Management System</h1>
+    </header>
+
+    <nav>
+        {% if not session.get('username') %}
+            <button onclick="showSection('login')">Login</button>
+        {% else %}
+            {% if session['role'] in ['admin', 'librarian'] %}
+                <button onclick="showSection('add-book')">Add Book</button>
+                <button onclick="showSection('add-user')">Add User</button>
+                <button onclick="showSection('delete-book')">Delete Book</button>
+            {% endif %}
+            <button onclick="showSection('issue-book')">Issue Book</button>
+            <button onclick="showSection('return-book')">Return Book</button>
+            <button onclick="window.location.href='/logout'">Logout</button>
+        {% endif %}
+        <select onchange="handleSearchDropdown(this)">
+            <option selected disabled>Search Options</option>
+            <option value="search-title">Search by Title</option>
+            <option value="search-author">Search by Author</option>
+            <option value="search-isbn">Search by ISBN</option>
+        </select>
+        <button onclick="window.location.href='/available'">Available Books</button>
+        <button onclick="window.location.href='/books'">See All Books</button>
+    </nav>
+
+    <!-- Forms -->
+    <section id="login" class="form-section">
+        <h2>Login</h2>
+        <form method="POST" action="/login">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+    </section>
+
+    <section id="add-book" class="form-section">
+        <h2>Add a Book</h2>
+        <form method="POST" action="/add-book">
+            <input type="text" name="ISBN" placeholder="ISBN" required pattern="\d+">
+            <input type="text" name="title" placeholder="Title" required>
+            <input type="text" name="author" placeholder="Author" required>
+            <input type="text" name="publisher" placeholder="Publisher" required>
+            <input type="text" name="genre" placeholder="Genre" required>
+            <input type="number" name="price" placeholder="Price" step="0.01" required>
+            <input type="number" name="min_age" placeholder="Minimum Age" required>
+            <input type="number" name="pages" placeholder="Number of Pages" required>
+            <button type="submit">Add Book</button>
+        </form>
+    </section>
+
+    <section id="add-user" class="form-section">
+        <h2>Add a User</h2>
+        <form method="POST" action="/add-user">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="text" name="first_name" placeholder="First Name" required>
+            <input type="text" name="last_name" placeholder="Last Name" required>
+            <input type="text" name="contact_number" placeholder="Contact Number" required>
+            <input type="email" name="contact_email" placeholder="Email" required>
+            <input type="text" name="residency" placeholder="Residency" required>
+            <input type="number" name="age" placeholder="Age" required>
+            <button type="submit">Add User</button>
+        </form>
+    </section>
+
+    <section id="issue-book" class="form-section">
+        <h2>Issue a Book</h2>
+        <form method="POST" action="/issue-book">
+            <input type="number" name="book_id" placeholder="Book ID" required>
+            <input type="text" name="title" placeholder="Book Title (optional)">
+            <input type="date" name="issue_date" required>
+            <button type="submit">Issue Book</button>
+        </form>
+    </section>
+
+    <section id="return-book" class="form-section">
+        <h2>Return a Book</h2>
+        <form method="POST" action="/return-book">
+            <input type="number" name="book_id" placeholder="Book ID" required>
+            <input type="text" name="title" placeholder="Book Title (optional)">
+            <input type="date" name="return_date" required>
+            <button type="submit">Return Book</button>
+        </form>
+    </section>
+
+    <section id="delete-book" class="form-section">
+        <h2>Delete a Book</h2>
+        <form method="POST" action="/delete-book" onsubmit="return confirmDelete();">
+            <input type="number" name="book_id" placeholder="Book ID" required>
+            <button type="submit">Delete Book</button>
+        </form>
+    </section>
+
+    <section id="search-title" class="form-section">
+        <h2>Search by Title</h2>
+        <form method="POST" action="/search-title">
+            <input type="text" name="title" placeholder="Enter book title" required>
+            <button type="submit">Search</button>
+        </form>
+    </section>
+
+    <section id="search-author" class="form-section">
+        <h2>Search by Author</h2>
+        <form method="POST" action="/search-author">
+            <input type="text" name="author" placeholder="Enter author name" required>
+            <button type="submit">Search</button>
+        </form>
+    </section>
+
+    <section id="search-isbn" class="form-section">
+        <h2>Search by ISBN</h2>
+        <form method="POST" action="/search-isbn">
+            <input type="text" name="isbn" placeholder="Enter ISBN" required pattern="\d+">
+            <button type="submit">Search</button>
+        </form>
+    </section>
+
+    <section class="results-section">
+        {% if books %}
+            <h2>All Books</h2>
+            <ul>
+                {% for book in books %}
+                    <li>
+                        <strong>{{ book['title'] }}</strong> by {{ book['author'] }} <br>
+                        ISBN: {{ book['ISBN'] }} | Genre: {{ book['genre'] }} | Status: {{ book['status'] }}
+                    </li>
+                {% endfor %}
+            </ul>
+	{% elif results and results|length > 0 %}
+            <h2>Search Results</h2>
+            <ul>
+                {% for book in results %}
+                    <li>
+                        <strong>{{ book['title'] }}</strong> by {{ book['author'] }} <br>
+                        ISBN: {{ book['ISBN'] }} | Genre: {{ book['genre'] }} | Status: {{ book['status'] }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</body>
+</html>

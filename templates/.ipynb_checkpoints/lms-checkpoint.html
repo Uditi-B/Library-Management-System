@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LMS - Online Library</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --color1: #ffffff;
+            --color2: #b6d7a8;
+            --color3: #2b5c16;
+            --color4: #6aa84f;
+            --color5: #2e6f11;
+        }
+
+        body {
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color1);
+        }
+
+        header {
+            background-color: var(--color5);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--color4);
+            padding: 30px 10px;
+            gap: 15px;
+        }
+
+        nav button {
+            padding: 15px 30px;
+            background-color: var(--color3);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        nav button:hover {
+            background-color: var(--color2);
+        }
+
+        main {
+            padding: 30px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        section {
+            display: none;
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        section.active {
+            display: block;
+        }
+
+        h2 {
+            color: var(--color5);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        label.required::after {
+            content: " *";
+            color: red;
+        }
+
+        input, select, button, textarea {
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button[type="submit"] {
+            background-color: var(--color4);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: var(--color5);
+        }
+    </style>
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo({ top: document.getElementById(id).offsetTop - 20, behavior: 'smooth' });
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Welcome to THE ONLINE LIBRARY</h1>
+        <p>Your friendly neighbourhood book place</p>
+    </header>
+
+    <nav>
+        <button onclick="showSection('see-books')">See All Books</button>
+        <button onclick="showSection('search')">Search Books</button>
+        <button onclick="showSection('add-book')">Add Book</button>
+        <button onclick="showSection('add-user')">Add User</button>
+        <button onclick="showSection('issue')">Issue Book</button>
+        <button onclick="showSection('return')">Return Book</button>
+    </nav>
+
+    <main>
+        <section id="see-books" class="form-section">
+            <h2>See All Books</h2>
+	    <button onclick="window.location.href='/books'">View Books</button>
+        </section>
+
+        <section id="search" class="form-section">
+            <h2>Search for a Book</h2>
+            <form action="/search" method="POST">
+                <label class="required" for="criteria">Search by:</label>
+                <select name="criteria" id="criteria" required>
+                    <option value="title">Title</option>
+                    <option value="author">Author</option>
+                    <option value="ISBN">ISBN</option>
+                    <option value="availability">Availability</option>
+                    <option value="id">ID</option>
+                </select>
+                <label class="required" for="query">Enter keywords</label>
+                <input type="text" name="query" id="query" required>
+                <button type="submit">Search</button>
+            </form>
+        </section>
+
+        <section id="add-book" class="form-section">
+            <h2>Add a Book</h2>
+            <form action="/add-book" method="POST">
+                <label class="required">ISBN</label>
+                <input type="text" name="ISBN" required>
+                <label class="required">Title</label>
+                <input type="text" name="title" required>
+                <label class="required">Author</label>
+                <input type="text" name="author" required>
+                <label class="required">Genre</label>
+                <input type="text" name="genre" required>
+                <label class="required">Price</label>
+                <input type="number" name="price" required>
+                <label class="required">Minimum Age</label>
+                <input type="number" name="min_age" required>
+                <label class="required">Pages</label>
+                <input type="number" name="pages" required>
+                <button type="submit">Add Book</button>
+            </form>
+        </section>
+
+        <section id="add-user" class="form-section">
+            <h2>Add a User</h2>
+            <form action="/add-user" method="POST">
+                <label class="required">First Name</label>
+                <input type="text" name="first_name" required>
+                <label class="required">Last Name</label>
+                <input type="text" name="last_name" required>
+                <label class="required">Contact Number</label>
+                <input type="text" name="contact_number" required>
+                <label class="required">Email</label>
+                <input type="email" name="contact_email" required>
+                <label class="required">Residency</label>
+                <input type="text" name="residency" required>
+                <label class="required">Age</label>
+                <input type="number" name="age" required min="1">
+                <label class="required">Creation Date</label>
+                <input type="date" name="creation_date" required>
+                <button type="submit">Add User</button>
+            </form>
+        </section>
+
+        <section id="issue" class="form-section">
+            <h2>Issue a Book</h2>
+            <form action="/issue-book" method="POST">
+                <label class="required">Book ID</label>
+                <input type="number" name="book_id" required>
+                <label>Book Title</label>
+                <input type="text" name="title">
+                <label class="required">User ID</label>
+                <input type="number" name="user_id" required>
+                <label class="required">Issue Date</label>
+                <input type="date" name="issue_date" required>
+                <button type="submit">Issue Book</button>
+            </form>
+        </section>
+
+        <section id="return" class="form-section">
+            <h2>Return a Book</h2>
+            <form action="/return-book" method="POST">
+                <label class="required">Book ID</label>
+                <input type="number" name="book_id" required>
+                <label>Book Title</label>
+                <input type="text" name="title">
+                <label class="required">User ID</label>
+                <input type="number" name="user_id" required>
+                <label class="required">Return Date</label>
+                <input type="date" name="return_date" required>
+                <button type="submit">Return Book</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Toast message container -->
+    <div id="toast" style="
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #4CAF50;
+        color: white;
+        text-align: center;
+        border-radius: 5px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1000;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 17px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    "></div>
+
+    <!-- Toast script logic -->
+    <script>
+        {% if message %}
+            const toast = document.getElementById("toast");
+            toast.textContent = {{ message|tojson }};
+            toast.style.visibility = "visible";
+            setTimeout(() => {
+                toast.style.visibility = "hidden";
+            }, 3000);
+        {% endif %}
+    </script>
+</body>
+</html>
