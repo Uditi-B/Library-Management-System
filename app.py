@@ -4,22 +4,21 @@ from datetime import datetime
 import sqlite3
 import os
 import hashlib
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 def get_db_connection():
     conn = sqlite3.connect("lms_basic.db")
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 def get_user_id_from_username(username):
     conn = get_db_connection()
@@ -28,7 +27,7 @@ def get_user_id_from_username(username):
     result = cursor.fetchone()
     conn.close()
     return result['id'] if result else None
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 def role_required(*allowed_roles):
     def decorator(f):
@@ -41,12 +40,12 @@ def role_required(*allowed_roles):
             return f(*args, **kwargs)
         return wrapped
     return decorator
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 @app.route('/')
 def home():
     return render_template('lms.html')
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -56,25 +55,24 @@ def login():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    user = cursor.execute("SELECT * FROM users WHERE username=? AND password=?",
-                          (username, hashed_password)).fetchone()
+    user = cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, hashed_password)).fetchone()
     conn.close()
 
     if user:
         session['username'] = user['username']
         session['role'] = user['role']
-	flash(f"Welcome, {user['username']}! You are logged in as {user['role']']}.")
+        flash(f"Welcome, {user['username']}! You are logged in as {user['role']}.")
         return redirect('/')
     else:
         flash("Invalid credentials")
         return redirect('/')
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 def add_a_user(username, password, first_name, last_name, contact_number, contact_email, residency, age, creation_date):
     conn = get_db_connection()
@@ -98,6 +96,7 @@ def add_a_user(username, password, first_name, last_name, contact_number, contac
     finally:
         conn.close()
 
+
 @app.route('/add-user', methods=['GET', 'POST'])
 @role_required('admin', 'librarian')
 def add_user_route():
@@ -119,7 +118,6 @@ def add_user_route():
     return redirect('/')
 
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/books')
 def see_all_books():
     conn = get_db_connection()
@@ -127,24 +125,22 @@ def see_all_books():
     conn.close()
     return render_template('lms.html', books=books)
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
-# Search by title
+
 def book_by_title(title):
     conn = get_db_connection()
     cursor = conn.cursor()
     keywords = title.strip().split()
     query = "SELECT * FROM books WHERE " + " AND ".join(["LOWER(title) LIKE ?"] * len(keywords))
     values = ['%' + word.lower() + '%' for word in keywords]
-    try: 
+    try:
         cursor.execute(query, values)
         result = cursor.fetchall()
         return result
-
     except sqlite3.Error:
         flash("Database error")
-
-    finally: 
+    finally:
         conn.close()
+
 
 @app.route('/search-title', methods=['GET', 'POST'])
 def search_books_title():
@@ -153,8 +149,8 @@ def search_books_title():
         title = request.form['title']
         results = book_by_title(title)
     return render_template('lms.html', results=results)
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
-# Search by author
+
+
 def book_by_author(author):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -169,7 +165,8 @@ def book_by_author(author):
         flash("Database error")
     finally:
         conn.close()
-    
+
+
 @app.route('/search-author', methods=['GET', 'POST'])
 def search_books_author():
     results = []
@@ -177,9 +174,8 @@ def search_books_author():
         author = request.form['author']
         results = book_by_author(author)
     return render_template('lms.html', results=results)
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Search by ISBN
+
 def book_by_ISBN(ISBN):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -192,6 +188,7 @@ def book_by_ISBN(ISBN):
     finally:
         conn.close()
 
+
 @app.route('/search-isbn', methods=['GET', 'POST'])
 def search_by_isbn():
     results = []
@@ -199,9 +196,8 @@ def search_by_isbn():
         isbn = request.form['isbn']
         results = book_by_ISBN(isbn)
     return render_template('lms.html', results=results)
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Search by availability
+
 def book_by_availability():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -214,17 +210,17 @@ def book_by_availability():
     finally:
         conn.close()
 
+
 @app.route('/available')
 def show_available_books():
     results = book_by_availability()
     return render_template('lms.html', results=results)
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Book by ID 
+
 def book_by_id(book_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    try: 
+    try:
         cursor.execute("SELECT * FROM books WHERE id = ?", (book_id,))
         result = cursor.fetchall()
         return result
@@ -233,19 +229,21 @@ def book_by_id(book_id):
     finally:
         conn.close()
 
+
 @app.route('/bookid', methods=['POST'])
 def show_book_by_id():
     book_id = request.form['book_id']
     results = book_by_id(book_id)
     return render_template('lms.html', results=results)
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 def add_a_book(ISBN, title, author, publisher, genre, price, min_age, pages):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute("""
-            INSERT INTO books (ISBN, title, author,publisher, genre, price, min_age, pages, status)
-            VALUES (?, ?, ?, ?, ?, ?, ? , ?, 'available')
+            INSERT INTO books (ISBN, title, author, publisher, genre, price, min_age, pages, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'available')
         """, (ISBN, title, author, publisher, genre, price, min_age, pages))
         conn.commit()
         return f"Added book: {title}"
@@ -254,9 +252,9 @@ def add_a_book(ISBN, title, author, publisher, genre, price, min_age, pages):
     finally:
         conn.close()
 
+
 @app.route('/add-book', methods=['GET', 'POST'])
 @role_required('admin', 'librarian')
-
 def add_book_route():
     message = ''
     if request.method == 'POST':
@@ -269,10 +267,9 @@ def add_book_route():
         min_age = request.form['min_age']
         pages = request.form['pages']
         message = add_a_book(ISBN, title, author, publisher, genre, price, min_age, pages)
-	flash(result)
+        flash(message)
     return render_template('lms.html', message=message)
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def issue_a_book(book_id, title, user_id, issue_date):
     conn = get_db_connection()
@@ -304,6 +301,7 @@ def issue_a_book(book_id, title, user_id, issue_date):
     finally:
         conn.close()
 
+
 @app.route('/issue-book', methods=['POST'])
 @role_required('admin', 'librarian', 'user')
 def issue_book_route():
@@ -315,7 +313,7 @@ def issue_book_route():
     flash(message)
     return redirect('/books')
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def return_a_book(book_id, title, user_id, return_date):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -337,6 +335,7 @@ def return_a_book(book_id, title, user_id, return_date):
     finally:
         conn.close()
 
+
 @app.route('/return-book', methods=['POST'])
 @role_required('admin', 'librarian')
 def return_book_route():
@@ -348,26 +347,24 @@ def return_book_route():
     flash(message)
     return redirect('/books')
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def delete_book(book_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Check if book exists
         cursor.execute("SELECT * FROM books WHERE id = ?", (book_id,))
         book = cursor.fetchone()
         if not book:
             return f"No book found with ID {book_id}."
 
-        # Delete the book
         cursor.execute("DELETE FROM books WHERE id = ?", (book_id,))
         conn.commit()
         return f"Book with ID {book_id} deleted successfully."
-
     except sqlite3.Error:
         return "Database error occurred while deleting book."
     finally:
         conn.close()
+
 
 @app.route('/delete-book', methods=['POST'])
 @role_required('admin', 'librarian')
@@ -376,10 +373,8 @@ def delete_book_route():
     message = delete_book(book_id)
     flash(message)
     return redirect('/books')
-    
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # default to 5000 locally
+    port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
-
-
