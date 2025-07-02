@@ -63,6 +63,7 @@ def login():
     if user:
         session['username'] = user['username']
         session['role'] = user['role']
+	flash(f"Welcome, {user['username']}! You are logged in as {user['role']']}.")
         return redirect('/')
     else:
         flash("Invalid credentials")
@@ -268,6 +269,7 @@ def add_book_route():
         min_age = request.form['min_age']
         pages = request.form['pages']
         message = add_a_book(ISBN, title, author, publisher, genre, price, min_age, pages)
+	flash(result)
     return render_template('lms.html', message=message)
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -377,4 +379,7 @@ def delete_book_route():
     
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))  # default to 5000 locally
+    app.run(debug=True, host='0.0.0.0', port=port)
+
+
